@@ -1,5 +1,5 @@
-CREATE schema cakeshop;
-USE cakeshop;
+CREATE schema teddyshop;
+USE teddyshop;
 
 CREATE TABLE user (
     id INT AUTO_INCREMENT PRIMARY KEY,

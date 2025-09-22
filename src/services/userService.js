@@ -22,7 +22,7 @@ async function createUser(username, password) {
   // Tạo token sau khi user được tạo thành công
   const payload = { id: user.id, username: user.username };
   const secret = process.env.JWT_SECRET || 'dev_secret_key_change_me';
-  const token = jwt.sign(payload, secret, { expiresIn: '2h' });
+  const token = jwt.sign(payload, secret, { expiresIn: '7d' });
 
   return { ...payload, token };  // chỉ return một lần
 }
@@ -52,7 +52,7 @@ async function verifyLogin(username, password) {
   // Tạo token giống như createUser
   const payload = { id: user.id, username: user.username };
   const secret = process.env.JWT_SECRET || 'dev_secret_key_change_me';
-  const token = jwt.sign(payload, secret, { expiresIn: '2h' });
+  const token = jwt.sign(payload, secret, { expiresIn: '7d' });
 
   return { message: 'Đăng nhập thành công', ...payload, token };
 }
