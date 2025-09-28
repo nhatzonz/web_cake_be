@@ -2,24 +2,25 @@ const path = require('path');
 const { ShopInfo } = require('../models');
 
 async function createShopInfo(file, payload) {
-  if (!file) {
-    const error = new Error('Thiếu file ảnh (field: image)');
-    error.status = 400;
-    throw error;
+  const { name, phone, email, address, link_face, link_mess, link_tiktok } = payload;
+  
+  const shopInfoData = { name, phone, email, address, link_face, link_mess, link_tiktok };
+  
+  // Chỉ thêm logo_image nếu có file
+  if (file) {
+    const relativePath = path.posix.join('/uploads', path.basename(file.path));
+    shopInfoData.logo_image = relativePath;
   }
 
-  const { name, phone, email, address, link_face, link_mess, link_tiktok } = payload;
-  const relativePath = path.posix.join('/uploads', path.basename(file.path));
-
-  const shopInfo = await ShopInfo.create({
-    name, phone, email, address, link_face, link_mess, link_tiktok, logo_image: relativePath,
-  });
+  const shopInfo = await ShopInfo.create(shopInfoData);
 
   return shopInfo;
 }
 
 async function getShopInfo() {
-  const shopInfo = await ShopInfo.findOne({ where: { id: 1 } });
+  const shopInfo = await ShopInfo.findOne({ 
+    order: [['id', 'DESC']] // Lấy record mới nhất
+  });
   return shopInfo;
 }
 
@@ -34,20 +35,35 @@ async function updateShopInfo(file, payload) {
     updateData.logo_image = relativePath;
   }
 
-  await ShopInfo.update(updateData, { where: { id: 1 } });
-  const updatedShopInfo = await ShopInfo.findByPk(1);
-  return updatedShopInfo;
-}
-
-async function deleteShopInfo() {
-  const shopInfo = await ShopInfo.findByPk(1);
-  if (!shopInfo) {
-    const error = new Error('Thông tin cửa hàng không tồn tại');
+  // Tìm record mới nhất để update
+  const latestShopInfo = await ShopInfo.findOne({ 
+    order: [['id', 'DESC']] 
+  });
+  
+  if (!latestShopInfo) {
+    const error = new Error('Không tìm thấy thông tin cửa hàng để cập nhật');
     error.status = 404;
     throw error;
   }
 
-  await ShopInfo.destroy({ where: { id: 1 } });
+  await ShopInfo.update(updateData, { where: { id: latestShopInfo.id } });
+  const updatedShopInfo = await ShopInfo.findByPk(latestShopInfo.id);
+  return updatedShopInfo;
+}
+
+async function deleteShopInfo() {
+  // Tìm record mới nhất để xóa
+  const latestShopInfo = await ShopInfo.findOne({ 
+    order: [['id', 'DESC']] 
+  });
+  
+  if (!latestShopInfo) {
+    const error = new Error('Không tìm thấy thông tin cửa hàng để xóa');
+    error.status = 404;
+    throw error;
+  }
+
+  await ShopInfo.destroy({ where: { id: latestShopInfo.id } });
   return { message: 'Thông tin cửa hàng đã được xóa thành công' };
 }
 
